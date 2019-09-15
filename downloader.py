@@ -8,11 +8,11 @@ import dateutil.parser
 import pytz
 
 
-min_rating = 0.65
-min_downloads = 500
+min_rating_expert_plus = 0.67
+min_downloads_expert_plus = 800
 
-min_rating_not_expert = 0.80
-min_downloads_not_expert = 1000
+min_rating_expert = 0.70
+min_downloads_expert = 1000
 
 days_to_stable = 14
 download_location = 'D:/Beat Saber/beatsaver-downloader/files/'
@@ -22,7 +22,7 @@ def run_downloader():
     if not os.path.exists(download_location):
         os.makedirs(download_location)
 
-    next_page = 40  # Posible arrancar desde una pagina mas alta debido a los 30 dias que no se tienen en cuenta
+    next_page = 45  # Posible arrancar desde una pagina mas alta debido a los 30 dias que no se tienen en cuenta
     now = datetime.now(pytz.utc)
     from_date = now - timedelta(days=days_to_stable)
     until_date = None
@@ -58,12 +58,8 @@ def download_from_page(page_number, from_date, until_date):
             metadata = doc.get('metadata')
             difficulties = metadata.get('difficulties')
             stats = doc.get('stats')
-            if ((difficulties.get('expert') or difficulties.get('expertPlus'))
-                and stats.get('rating') > min_rating
-                and stats.get('downloads') > min_downloads) \
-                    or (not difficulties.get('expert') and not difficulties.get('expertPlus')
-                        and stats.get('rating') > min_rating_not_expert
-                        and stats.get('downloads') > min_downloads_not_expert):
+            if (difficulties.get('expertPlus') and stats.get('rating') > min_rating_expert_plus and stats.get('downloads') > min_downloads_expert_plus) \
+                    or (difficulties.get('expert') and stats.get('rating') > min_rating_expert and stats.get('downloads') > min_downloads_expert):
                 filename = doc.get('key')+' - '+metadata.get('songName')
                 filename = remove_disallowed_filename_chars(filename)
                 try:

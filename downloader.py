@@ -6,23 +6,31 @@ import os
 import shutil
 import dateutil.parser
 import pytz
+import cfscrape
 
+scraper = cfscrape.create_scraper()
 
-min_rating_expert_plus = 0.67
+min_rating_expert_plus_low = 0.70
+min_rating_expert_plus = 0.75
 min_downloads_expert_plus = 800
 
-min_rating_expert = 0.70
-min_downloads_expert = 1000
+min_rating_expert = 0.85
+min_downloads_expert = 2500
 
 days_to_stable = 14
-download_location = 'D:/Beat Saber/beatsaver-downloader/files/'
+download_expert_location = 'D:/Beat Saber/beatsaver-downloader/files/expert/'
+download_expert_plus_location = 'D:/Beat Saber/beatsaver-downloader/files/expert_plus/'
+download_expert_plus_low_location = 'D:/Beat Saber/beatsaver-downloader/files/expert_plus_low/'
 
 
 def run_downloader():
-    if not os.path.exists(download_location):
-        os.makedirs(download_location)
+    if not os.path.exists(download_expert_location):
+        os.makedirs(download_expert_location)
 
-    next_page = 45  # Posible arrancar desde una pagina mas alta debido a los 30 dias que no se tienen en cuenta
+    if not os.path.exists(download_expert_plus_location):
+        os.makedirs(download_expert_plus_location)
+
+    next_page = 60  # Posible arrancar desde una pagina mas alta debido a los 30 dias que no se tienen en cuenta
     now = datetime.now(pytz.utc)
     from_date = now - timedelta(days=days_to_stable)
     until_date = None
@@ -46,7 +54,8 @@ def run_downloader():
 
 def download_from_page(page_number, from_date, until_date):
     print('Page: '+str(page_number))
-    r = requests.get('https://beatsaver.com/api/maps/latest/'+str(page_number))
+    r = scraper.get('https://beatsaver.com/api/maps/latest/'+str(page_number))
+    # r = requests.get('https://beatsaver.com/api/maps/latest/'+str(page_number))
     data = r.json()
     for doc in data.get('docs'):
 
@@ -58,14 +67,23 @@ def download_from_page(page_number, from_date, until_date):
             metadata = doc.get('metadata')
             difficulties = metadata.get('difficulties')
             stats = doc.get('stats')
-            if (difficulties.get('expertPlus') and stats.get('rating') > min_rating_expert_plus and stats.get('downloads') > min_downloads_expert_plus) \
+            if (difficulties.get('expertPlus') and stats.get('rating') > min_rating_expert_plus_low and stats.get('downloads') > min_downloads_expert_plus) \
                     or (difficulties.get('expert') and stats.get('rating') > min_rating_expert and stats.get('downloads') > min_downloads_expert):
+                if not difficulties.get('expertPlus'):
+                    location = download_expert_location
+                else:
+                    if stats.get('rating') > min_rating_expert_plus:
+                        location = download_expert_plus_location
+                    else:
+                        location = download_expert_plus_low_location
                 filename = doc.get('key')+' - '+metadata.get('songName')
                 filename = remove_disallowed_filename_chars(filename)
                 try:
                     print(filename)
-                    r_file = requests.get('https://beatsaver.com'+doc.get('downloadURL'))
-                    with open(download_location+filename+'.zip', 'wb') as f:
+                    # r_file = requests.get('https://beatsaver.com'+doc.get('directDownload'))
+                    # r_file = requests.get('https://beatsaver.com'+doc.get('downloadURL'))
+                    r_file = scraper.get('https://beatsaver.com'+doc.get('downloadURL'))
+                    with open(location+filename+'.zip', 'wb') as f:
                         f.write(r_file.content)
                 except:
                     pass

@@ -1,9 +1,12 @@
 import os
-import requests
+# import requests
 import csv
+import cfscrape
+
+scraper = cfscrape.create_scraper()
 
 # check_location = 'D:/Beat Saber/songs/3_g/'
-check_location = 'D:/Beat Saber/songs/2_g/'
+check_location = 'D:/Beat Saber/songs/4_g/'
 destination_file = check_location+'check_results.csv'
 
 
@@ -30,7 +33,7 @@ def check_values():
             filename_parts = filename.split(' - ', 1)
             key = filename_parts[0]
 
-            r = requests.get('https://beatsaver.com/api/maps/detail/' + str(key))
+            r = scraper.get('https://beatsaver.com/api/maps/detail/' + str(key))
             if r.status_code == 200:
                 print(key)
                 data = r.json()

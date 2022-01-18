@@ -2,18 +2,18 @@ from datetime import datetime, timedelta
 import string
 import unicodedata
 import os
-import shutil
 import dateutil.parser
 import pytz
 import cfscrape
 
 scraper = cfscrape.create_scraper()
 
+min_nps = 3
+max_nps = 9.5
 min_score_expert_plus = 0.75
-min_downloads_expert_plus = 800
 
 days_to_stable = 14
-download_location = "D:/archive/Beat Saber/beatsaver-downloader/"
+download_location = "D:/archive/BeatSaber/downloader/"
 
 
 def run_downloader():
@@ -73,21 +73,30 @@ def download_from_page(page_number, from_date, until_date):
                 hasExpertPlus = contains(
                     difficulties, lambda x: x.get("difficulty") == "ExpertPlus"
                 )
+                if hasExpertPlus:
+                    nps_expert_plus = None
+                    for diff in difficulties:
+                        if (
+                            diff.get("difficulty")
+                            and diff.get("difficulty") == "ExpertPlus"
+                        ):
+                            nps_expert_plus = diff.get("nps")
+                            break
 
-                if (
-                    hasExpertPlus
-                    and stats.get("score") > min_score_expert_plus
-                    and stats.get("downloads") > min_downloads_expert_plus
-                ):
-                    filename = doc.get("id") + " - " + metadata.get("songName")
-                    filename = remove_disallowed_filename_chars(filename)
-                    try:
-                        print(filename)
-                        r_file = scraper.get(version.get("downloadURL"))
-                        with open(download_location + filename + ".zip", "wb") as f:
-                            f.write(r_file.content)
-                    except:
-                        pass
+                    if (
+                        stats.get("score") >= min_score_expert_plus
+                        and nps_expert_plus >= min_nps
+                        and nps_expert_plus <= max_nps
+                    ):
+                        filename = doc.get("id") + " - " + metadata.get("songName")
+                        filename = remove_disallowed_filename_chars(filename)
+                        try:
+                            print(filename)
+                            r_file = scraper.get(version.get("downloadURL"))
+                            with open(download_location + filename + ".zip", "wb") as f:
+                                f.write(r_file.content)
+                        except:
+                            pass
 
     return page_number + 1
 
@@ -100,19 +109,4 @@ def remove_disallowed_filename_chars(filename):
     return "".join(chr(c) for c in cleaned_filename if chr(c) in validFilenameChars)
 
 
-def fix_names():
-    for dirname, dirnames, filenames in os.walk("files"):
-        for filename in filenames:
-            filename_parts = filename.split(" - ", 1)
-            key = filename_parts[0]
-            while len(key) < 4:
-                key = "0" + key
-
-            nombre = key + " - " + filename_parts[1]
-            print(nombre)
-            shutil.move(os.path.join(dirname, filename), os.path.join(dirname, nombre))
-
-
 run_downloader()
-
-# fix_names()

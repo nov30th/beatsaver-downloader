@@ -5,6 +5,7 @@ import os
 import dateutil.parser
 import pytz
 import cfscrape
+import zipfile
 
 scraper = cfscrape.create_scraper()
 
@@ -13,7 +14,7 @@ max_nps = 9.5
 min_score_expert_plus = 0.75
 
 days_to_stable = 14
-download_location = "D:/archive/BeatSaber/downloader/"
+download_location = "D:/Temp_Saber_Songs/"
 
 
 def run_downloader():
@@ -71,14 +72,14 @@ def download_from_page(page_number, from_date, until_date):
             for version in doc.get("versions"):
                 difficulties = version.get("diffs")
                 hasExpertPlus = contains(
-                    difficulties, lambda x: x.get("difficulty") == "ExpertPlus"
+                    difficulties, lambda x: x.get("difficulty") == "Expert"
                 )
                 if hasExpertPlus:
                     nps_expert_plus = None
                     for diff in difficulties:
                         if (
                             diff.get("difficulty")
-                            and diff.get("difficulty") == "ExpertPlus"
+                            and diff.get("difficulty") == "Expert"
                         ):
                             nps_expert_plus = diff.get("nps")
                             break
@@ -92,9 +93,18 @@ def download_from_page(page_number, from_date, until_date):
                         filename = remove_disallowed_filename_chars(filename)
                         try:
                             print(filename)
+                            # file if exist
+                            if os.path.isdir("D:\\SteamLibrary\\steamapps\\common\\Beat Saber\\Beat Saber_Data\\CustomLevels\\" + filename):
+                                print(rf"{filename} File Exists")
+                                continue
                             r_file = scraper.get(version.get("downloadURL"))
                             with open(download_location + filename + ".zip", "wb") as f:
                                 f.write(r_file.content)
+                            zip_file = zipfile.ZipFile(download_location + filename + ".zip")
+                            zip_file.extractall("D:\\SteamLibrary\\steamapps\\common\\Beat Saber\\Beat Saber_Data\\CustomLevels\\" + filename)
+                            zip_file.close()
+                            os.remove(download_location + filename + ".zip")
+
                         except:
                             pass
 

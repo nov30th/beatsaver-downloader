@@ -1,3 +1,4 @@
+import html
 import os
 import string
 import zipfile
@@ -48,9 +49,13 @@ def main():
         # for each article
         for article in articles:
             # find the span tag and class "post-stat" in the article html text
-            if "post-stat" in article:
+            if len(article) > 10 and "post-stat" in article:
                 # find the song name
                 song_name = article.split("<h4 class=\"entry-title\" itemprop=\"name headline\">")[1].split("</a>")[0].split(">")[1]
+                # song_name url decode
+                song_name = html.unescape(song_name)
+                song_name = song_name.replace("&", " And ")
+                # remove disallowed characters from the song name
                 song_name = remove_disallowed_filename_chars(song_name)
                 # find the value of "<i class='fa fa-thumbs-up fa-fw' aria-hidden='true'></i>{value}</span>"
                 # and convert it to an integer
@@ -73,6 +78,15 @@ def main():
                             # file if exist
                             if os.path.isdir("D:\\SteamLibrary\\steamapps\\common\\Beat Saber\\Beat Saber_Data\\CustomLevels\\" + dest_file_or_folder_name):
                                 print(rf"{dest_file_or_folder_name} File Exists")
+                                continue
+                            # if folder contains key at beginning then skip outer loop
+                            folder_exist = False
+                            for folder in os.listdir("D:\\SteamLibrary\\steamapps\\common\\Beat Saber\\Beat Saber_Data\\CustomLevels\\"):
+                                if folder.startswith(key):
+                                    print(rf"{dest_file_or_folder_name} File Exists")
+                                    folder_exist = True
+                                    continue
+                            if folder_exist:
                                 continue
                             # download the file of download_link into the download_location
                             # r_file = scraper.get(download_link)

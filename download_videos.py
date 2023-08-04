@@ -39,6 +39,14 @@ for folder in find_all(file_name, folder):
             print(folder, video_id, video_file)
             full_path_of_folder = os.path.dirname(folder)
 
+            # if file exist full_path_of_folder + video_file
+            if os.path.isfile(full_path_of_folder + "\\" + video_file):
+                print(rf"{video_file} File Exists")
+                # check if file larger than 1MB
+                if os.path.getsize(full_path_of_folder + "\\" + video_file) > 1024 * 1024:
+                    print(rf"{video_file} File Exists and Larger than 1MB")
+                    continue
+
             # download the video using pytube
             url = "https://www.youtube.com/watch?v=" + video_id
             print(rf"Downloading: {url}, to {full_path_of_folder}")

@@ -10,8 +10,8 @@ import zipfile
 scraper = cfscrape.create_scraper()
 
 min_nps = 3
-max_nps = 9.5
-min_score_expert_plus = 0.75
+max_nps = 7
+min_score_expert_plus = 0.82
 
 days_to_stable = 14
 download_location = "D:/Temp_Saber_Songs/"
